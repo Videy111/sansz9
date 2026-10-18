@@ -1,0 +1,649 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Top Trending Video</title>
+
+<style>
+:root {
+  --bg: #080914;
+  --panel: #111326;
+  --purple: #9b5cff;
+  --blue: #28c9ff;
+  --text: #f4f4ff;
+  --muted: #a5a7c4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 20% 0%, #211342 0, transparent 38%),
+    radial-gradient(circle at 100% 30%, #081f39 0, transparent 35%),
+    var(--bg);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+.container {
+  width: min(100% - 24px, 950px);
+  margin: 0 auto;
+  padding: 24px 0 40px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: clamp(25px, 5vw, 38px);
+  font-weight: 900;
+  letter-spacing: 1px;
+  background: linear-gradient(90deg, #c18aff, #36d8ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.header p {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.player-card {
+  padding: 10px;
+  border-radius: 18px;
+  border: 1px solid #34305b;
+  background: linear-gradient(145deg, #17152b, #0c1020);
+  box-shadow: 0 0 28px #7b43ff19, 0 0 55px #27c8ff0c;
+}
+
+.video-wrap {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  border-radius: 12px;
+  aspect-ratio: 16 / 9;
+}
+
+video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.center-play {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 70px;
+  height: 70px;
+  border: 1px solid #ffffff65;
+  border-radius: 50%;
+  color: white;
+  font-size: 27px;
+  background: #8c4dffcc;
+  cursor: pointer;
+  box-shadow: 0 0 30px #9b5cff80;
+  display: grid;
+  place-items: center;
+}
+
+.video-wrap.playing .center-play {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+}
+
+.video-wrap:hover .center-play {
+  opacity: 1;
+}
+
+.controls {
+  padding: 12px 5px 3px;
+}
+
+.progress {
+  width: 100%;
+  height: 5px;
+  appearance: none;
+  background: #34344c;
+  border-radius: 99px;
+  cursor: pointer;
+  display: block;
+}
+
+.progress::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 8px var(--blue);
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 11px;
+}
+
+.control-btn {
+  background: transparent;
+  border: 0;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 7px;
+}
+
+.time {
+  color: #c5c6df;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.small-btn {
+  border: 1px solid #474265;
+  background: #1b1a30;
+  color: white;
+  border-radius: 8px;
+  padding: 8px 11px;
+  cursor: pointer;
+}
+
+.video-info {
+  padding: 17px 5px 5px;
+}
+
+.video-info h2 {
+  font-size: 20px;
+  margin: 0 0 7px;
+}
+
+.video-info p {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.page-btn {
+  min-width: 43px;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid #39365b;
+  background: #141528;
+  color: #e9e7ff;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.page-btn:hover {
+  border-color: var(--blue);
+  box-shadow: 0 0 13px #28c9ff30;
+}
+
+.page-btn.active {
+  color: white;
+  border-color: var(--purple);
+  background: linear-gradient(135deg, #8549ed, #246fd0);
+  box-shadow: 0 0 15px #9b5cff45;
+}
+
+.page-btn:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+.ad-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: #050510eF;
+  text-align: center;
+}
+
+.ad-overlay.show {
+  display: flex;
+}
+
+.ad-box {
+  width: min(100%, 350px);
+  border: 1px solid #7955c7;
+  background: linear-gradient(145deg, #1b1633, #0d172b);
+  padding: 23px 18px;
+  border-radius: 16px;
+  box-shadow: 0 0 35px #874bff30;
+}
+
+.ad-box h3 {
+  margin: 0 0 10px;
+  font-size: 21px;
+}
+
+.ad-box p {
+  color: #c1bfd8;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ad-link-btn,
+.continue-btn {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 9px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.ad-link-btn {
+  border: 0;
+  color: white;
+  background: linear-gradient(90deg, #8d43f4, #258ee8);
+}
+
+.continue-btn {
+  color: #e6e4ff;
+  border: 1px solid #484265;
+  background: #18172a;
+}
+
+.footer {
+  text-align: center;
+  color: #777995;
+  font-size: 12px;
+  padding-top: 12px;
+}
+
+@media (max-width: 480px) {
+  .container {
+    width: calc(100% - 16px);
+    padding-top: 18px;
+  }
+
+  .player-card {
+    padding: 6px;
+    border-radius: 13px;
+  }
+
+  .video-wrap {
+    border-radius: 9px;
+  }
+
+  .center-play {
+    width: 56px;
+    height: 56px;
+    font-size: 23px;
+  }
+
+  .control-row {
+    gap: 5px;
+  }
+
+  .page-btn {
+    min-width: 39px;
+    height: 39px;
+    padding: 0 10px;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <header class="header">
+    <h1>TOP TRENDING VIDEO</h1>
+    <p>Pilih nomor video yang ingin kamu tonton</p>
+  </header>
+
+  <main>
+    <section class="player-card">
+      <div class="video-wrap" id="videoWrap">
+
+        <video
+          id="mainVideo"
+          playsinline
+          preload="metadata"
+          controlslist="nodownload"
+        >
+          <source src="" type="video/mp4">
+          Browser kamu tidak mendukung pemutar video.
+        </video>
+
+        <button
+          class="center-play"
+          id="centerPlay"
+          aria-label="Putar atau jeda video"
+        >▶</button>
+
+        <div class="ad-overlay" id="adOverlay">
+          <div class="ad-box">
+            <h3>Video dijeda sebentar</h3>
+            <p>Klik tombol di bawah untuk membuka tautan, lalu lanjutkan video.</p>
+            <a
+              class="ad-link-btn"
+              id="adLink"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+            >Buka Direct Link ↗</a>
+            <button class="continue-btn" id="continueBtn">
+              Lanjutkan Video ▶
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="controls">
+        <input
+          class="progress"
+          id="progress"
+          type="range"
+          min="0"
+          max="100"
+          value="0"
+          step="0.1"
+          aria-label="Posisi video"
+        >
+
+        <div class="control-row">
+          <button class="control-btn" id="playPause" aria-label="Putar atau jeda">▶</button>
+          <span class="time" id="timeDisplay">00:00 / 00:00</span>
+          <span class="spacer"></span>
+          <button class="small-btn" id="shareBtn">Bagikan ↗</button>
+          <button class="control-btn" id="fullscreenBtn" aria-label="Layar penuh">⛶</button>
+        </div>
+      </div>
+
+      <div class="video-info">
+        <h2 id="videoTitle">Video 1</h2>
+        <p id="videoDescription">Video pilihan kamu akan diputar di sini.</p>
+      </div>
+    </section>
+
+    <nav class="pagination" id="pagination" aria-label="Pilih video">
+      <!-- Tombol angka dibuat otomatis oleh JavaScript -->
+    </nav>
+  </main>
+
+  <footer class="footer">
+    © <span id="year"></span> Top Trending Video
+  </footer>
+</div>
+
+<script>
+/*
+  GANTI URL VIDEO DI BAGIAN INI.
+  Tambahkan objek baru untuk menambah nomor video.
+  Pastikan setiap URL mengarah ke file video yang bisa diputar langsung.
+*/
+const VIDEOS = [
+  {
+    title: "Video 1",
+    description: "Video utama",
+    src: "https://videotourl.com/videos/1792060749072-c60082fe-0611-4161-b36d-0b3a80d23df4.mp4"
+  },
+  {
+    title: "Video 2",
+    description: "Video kedua — ganti URL dengan video milikmu",
+    src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+  },
+  {
+    title: "Video 3",
+    description: "Video ketiga — ganti URL dengan video milikmu",
+    src: "https://www.w3schools.com/html/mov_bbb.mp4"
+  }
+];
+
+const AD_URL =
+  "https://www.profitableratecpmnetwork.com/dzth71h9?key=0d1e630d97de4d34d79e6dd18d6a2fe8";
+
+const AD_GATE_TIMES = [15, 40];
+
+const video = document.getElementById("mainVideo");
+const videoWrap = document.getElementById("videoWrap");
+const centerPlay = document.getElementById("centerPlay");
+const playPause = document.getElementById("playPause");
+const progress = document.getElementById("progress");
+const timeDisplay = document.getElementById("timeDisplay");
+const fullscreenBtn = document.getElementById("fullscreenBtn");
+const shareBtn = document.getElementById("shareBtn");
+const pagination = document.getElementById("pagination");
+const videoTitle = document.getElementById("videoTitle");
+const videoDescription = document.getElementById("videoDescription");
+const adOverlay = document.getElementById("adOverlay");
+const adLink = document.getElementById("adLink");
+const continueBtn = document.getElementById("continueBtn");
+
+let currentIndex = 0;
+let triggeredGates = new Set();
+let videoWasPlaying = false;
+
+adLink.href = AD_URL;
+document.getElementById("year").textContent = new Date().getFullYear();
+
+function formatTime(seconds) {
+  if (!Number.isFinite(seconds) || seconds < 0) return "00:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return String(mins).padStart(2, "0") + ":" +
+         String(secs).padStart(2, "0");
+}
+
+function renderPagination() {
+  pagination.innerHTML = "";
+
+  VIDEOS.forEach((item, index) => {
+    const button = document.createElement("button");
+    button.className = "page-btn" + (index === currentIndex ? " active" : "");
+    button.textContent = index + 1;
+    button.type = "button";
+    button.setAttribute("aria-label", "Putar video " + (index + 1));
+
+    button.addEventListener("click", () => {
+      loadVideo(index, true);
+    });
+
+    pagination.appendChild(button);
+  });
+}
+
+function loadVideo(index, autoplay = false) {
+  if (index < 0 || index >= VIDEOS.length) return;
+
+  currentIndex = index;
+  triggeredGates = new Set();
+
+  adOverlay.classList.remove("show");
+  video.pause();
+
+  const item = VIDEOS[index];
+  video.src = item.src;
+  video.load();
+
+  videoTitle.textContent = item.title || "Video " + (index + 1);
+  videoDescription.textContent = item.description || "";
+  progress.value = 0;
+  timeDisplay.textContent = "00:00 / 00:00";
+
+  renderPagination();
+
+  if (autoplay) {
+    const promise = video.play();
+    if (promise && promise.catch) promise.catch(() => {});
+  }
+}
+
+function togglePlay() {
+  if (adOverlay.classList.contains("show")) return;
+
+  if (video.paused) {
+    const promise = video.play();
+    if (promise && promise.catch) promise.catch(() => {});
+  } else {
+    video.pause();
+  }
+}
+
+centerPlay.addEventListener("click", togglePlay);
+playPause.addEventListener("click", togglePlay);
+
+video.addEventListener("play", () => {
+  playPause.textContent = "Ⅱ";
+  centerPlay.textContent = "▶";
+  videoWrap.classList.add("playing");
+});
+
+video.addEventListener("pause", () => {
+  playPause.textContent = "▶";
+  videoWrap.classList.remove("playing");
+});
+
+video.addEventListener("timeupdate", () => {
+  const duration = video.duration || 0;
+  const current = video.currentTime || 0;
+
+  progress.value = duration ? (current / duration) * 100 : 0;
+  timeDisplay.textContent =
+    formatTime(current) + " / " + formatTime(duration);
+
+  // Maksimal dua pemicu per video: sekitar detik ke-15 dan ke-40.
+  for (const gateTime of AD_GATE_TIMES) {
+    if (
+      current >= gateTime &&
+      !triggeredGates.has(gateTime) &&
+      !video.ended
+    ) {
+      triggeredGates.add(gateTime);
+      videoWasPlaying = !video.paused;
+      video.pause();
+      adOverlay.classList.add("show");
+      break;
+    }
+  }
+});
+
+video.addEventListener("loadedmetadata", () => {
+  timeDisplay.textContent =
+    formatTime(video.currentTime) + " / " + formatTime(video.duration);
+});
+
+progress.addEventListener("input", () => {
+  if (Number.isFinite(video.duration) && video.duration > 0) {
+    video.currentTime = (Number(progress.value) / 100) * video.duration;
+  }
+});
+
+continueBtn.addEventListener("click", () => {
+  adOverlay.classList.remove("show");
+
+  if (videoWasPlaying) {
+    const promise = video.play();
+    if (promise && promise.catch) promise.catch(() => {});
+  }
+});
+
+fullscreenBtn.addEventListener("click", async () => {
+  try {
+    if (!document.fullscreenElement) {
+      if (videoWrap.requestFullscreen) {
+        await videoWrap.requestFullscreen();
+      } else if (video.webkitEnterFullscreen) {
+        video.webkitEnterFullscreen();
+      }
+    } else {
+      await document.exitFullscreen();
+    }
+  } catch (error) {
+    console.log("Mode layar penuh tidak tersedia:", error);
+  }
+});
+
+shareBtn.addEventListener("click", async () => {
+  const shareData = {
+    title: document.title,
+    text: videoTitle.textContent,
+    url: window.location.href
+  };
+
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+    } else if (navigator.clipboard) {
+      await navigator.clipboard.writeText(window.location.href);
+      shareBtn.textContent = "Tersalin ✓";
+      setTimeout(() => shareBtn.textContent = "Bagikan ↗", 1800);
+    } else {
+      window.prompt("Salin tautan halaman ini:", window.location.href);
+    }
+  } catch (error) {
+    // Pengguna membatalkan menu bagikan.
+  }
+});
+
+loadVideo(0, false);
+</script>
+
+<!-- Histats Analytics -->
+<script type="text/javascript">
+var _Hasync = _Hasync || [];
+_Hasync.push(['Histats.start', '1,5043495,4,0,0,0,00010000']);
+_Hasync.push(['Histats.fasi', '1']);
+_Hasync.push(['Histats.track_hits', '']);
+(function() {
+  var hs = document.createElement('script');
+  hs.type = 'text/javascript';
+  hs.async = true;
+  hs.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 's10.histats.com/js15_as.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
+})();
+</script>
+<noscript>
+  <a href="/" target="_blank" rel="noopener noreferrer">
+    <img src="https://sstatic1.histats.com/0.gif?5043495&101"
+         alt="web tracker" border="0">
+  </a>
+</noscript>
+
+</body>
+</html>
