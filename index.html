@@ -15,10 +15,10 @@
 <meta property="og:image:alt" content="🎥MANTAP">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:site_name" content="🎥MANTAP>
+<meta property="og:site_name" content="🎥MANTAP">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="🎥 NIKMAT">
+<meta name="twitter:title" content="🎥MANTAP">
 <meta name="twitter:description" content="Tonton video terbaru dan video lainnya.">
 <meta name="twitter:image" content="https://jpcdn.it/img/78cdf523e00fb268089737a9a79c0a76.jpg">
 
@@ -235,7 +235,7 @@ video {
   white-space: nowrap;
 }
 
-/* Tampilan fullscreen */
+/* Fullscreen */
 .player-shell:fullscreen,
 .player-shell.is-fullscreen {
   border-radius: 0;
@@ -263,7 +263,7 @@ video {
   bottom: 18px;
 }
 
-/* Overlay trigger */
+/* Trigger video */
 .continue-overlay {
   position: absolute;
   inset: 0;
@@ -357,7 +357,7 @@ video {
   margin: 22px 0;
 }
 
-/* Navigasi angka video */
+/* Navigasi video */
 .video-navigation {
   margin: 20px 0 25px;
   padding: 17px;
@@ -379,21 +379,44 @@ video {
   line-height: 1.5;
 }
 
+/* Deretan nomor horizontal yang bisa digeser */
+.video-number-scroller {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
 .video-numbers {
-  display: grid;
-  grid-template-columns: repeat(5,minmax(0,1fr));
-  gap: 10px;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  gap: 9px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-wrap: nowrap;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 2px 10px;
+  overscroll-behavior-x: contain;
+}
+
+.video-numbers::-webkit-scrollbar {
+  display: none;
 }
 
 .video-number {
-  min-width: 0;
-  aspect-ratio: 1/1;
-  max-height: 64px;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  max-height: none;
   border: 1px solid rgba(255,255,255,.13);
-  border-radius: 14px;
+  border-radius: 12px;
   color: #e8eaff;
   background: rgba(255,255,255,.045);
-  font-size: 19px;
+  font-size: 17px;
   font-weight: 800;
   cursor: pointer;
   transition: background .2s,border-color .2s,transform .2s;
@@ -411,8 +434,28 @@ video {
   box-shadow: 0 7px 22px rgba(99,102,241,.25);
 }
 
+.scroll-arrow {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255,255,255,.07);
+  color: #fff;
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.scroll-arrow:disabled {
+  opacity: .3;
+  cursor: default;
+}
+
 .now-playing {
-  margin-top: 14px;
+  margin-top: 10px;
   font-size: 12px;
   color: #c4b5fd;
   text-align: center;
@@ -457,7 +500,7 @@ footer {
 
   .time {
     font-size: 10px;
-    min-width: 56px;
+    min-width: 52px;
   }
 
   .info {
@@ -473,8 +516,17 @@ footer {
   }
 
   .video-number {
-    border-radius: 12px;
-    font-size: 17px;
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+    font-size: 16px;
+  }
+
+  .scroll-arrow {
+    flex-basis: 32px;
+    width: 32px;
+    height: 42px;
   }
 
   .continue-box {
@@ -487,21 +539,6 @@ footer {
     font-size: 26px;
   }
 }
-
-@media(max-width:360px) {
-  .video-numbers {
-    gap: 5px;
-  }
-
-  .video-number {
-    font-size: 15px;
-    border-radius: 9px;
-  }
-
-  .time {
-    min-width: 52px;
-  }
-}
 </style>
 </head>
 
@@ -512,6 +549,7 @@ footer {
     <div class="brand-mark">▶</div>
     <span>Video Player</span>
   </div>
+
   <button class="share-top" type="button" id="shareButton"
     aria-label="Bagikan">↗</button>
 </header>
@@ -538,14 +576,14 @@ footer {
       data-action="center-play"
       aria-label="Putar video">▶</button>
 
-    <!-- Trigger muncul di atas video, termasuk saat fullscreen -->
-    <div class="continue-overlay">
+    <!-- Overlay trigger -->
+    <div class="continue-overlay" id="continueOverlay">
       <div class="continue-box">
         <div class="ad-icon">▶</div>
         <h2>Lanjutkan Video</h2>
         <p>
-          Tekan tombol di bawah untuk melanjutkan video.
-          Tautan iklan akan dibuka saat kamu memilihnya.
+          Video dijeda sementara. Tekan tombol di bawah jika ingin
+          membuka tautan iklan dan melanjutkan video.
         </p>
 
         <a class="ad-button"
@@ -553,11 +591,11 @@ footer {
           target="_blank"
           rel="noopener noreferrer"
           data-action="continue-ad">
-          Lanjutkan &amp; Tonton Iklan
+          Lanjutkan &amp; Buka Iklan
         </a>
 
         <div class="small-note">
-          Iklan dibuka setelah kamu menekan tombol.
+          Tautan dibuka hanya setelah kamu menekan tombol.
         </div>
       </div>
     </div>
@@ -590,31 +628,31 @@ footer {
 
   <div class="divider"></div>
 
-  <!-- TOMBOL ANGKA 1 SAMPAI 5 -->
+  <!-- NOMOR VIDEO OTOMATIS DAN BISA DIGESER -->
   <section class="video-navigation">
     <div class="navigation-heading">✨ Pilih Video</div>
+
     <div class="navigation-description">
-      Tekan angka untuk mengganti video pada pemutar utama.
+      Pilih nomor video atau geser deretan angka ke kanan untuk
+      melihat video lainnya.
     </div>
 
-    <div class="video-numbers" id="videoNumbers">
-      <button class="video-number" type="button"
-        data-video="0" aria-pressed="false">1</button>
+    <div class="video-number-scroller">
+      <button class="scroll-arrow"
+        id="scrollLeft"
+        type="button"
+        aria-label="Geser nomor ke kiri"
+        disabled>‹</button>
 
-      <button class="video-number" type="button"
-        data-video="1" aria-pressed="false">2</button>
+      <div class="video-numbers"
+        id="videoNumbers"
+        aria-label="Daftar nomor video">
+      </div>
 
-      <button class="video-number" type="button"
-        data-video="2" aria-pressed="false">3</button>
-
-      <button class="video-number" type="button"
-        data-video="3" aria-pressed="false">4</button>
-
-      <button class="video-number" type="button"
-        data-video="4" aria-pressed="false">5</button>
-
-      <button class="video-number" type="button"
-        data-video="5" aria-pressed="false">6</button>
+      <button class="scroll-arrow"
+        id="scrollRight"
+        type="button"
+        aria-label="Geser nomor ke kanan">›</button>
     </div>
 
     <div class="now-playing" id="nowPlaying">
@@ -630,22 +668,24 @@ footer {
 (() => {
   "use strict";
 
-  const AD_URL =
-    "https://www.profitableratecpmnetwork.com/dzth71h9?key=0d1e630d97de4d34d79e6dd18d6a2fe8";
-
   const MAIN_SOURCE = "https://cdn2.videy.co/9au9V7wJ1.mp4";
 
-  // Video yang dipanggil oleh tombol angka 1 sampai 5.
+  /*
+    TAMBAHKAN VIDEO BARU DI SINI.
+
+    Setiap URL baru otomatis mendapatkan tombol nomor.
+    Video utama di atas tidak termasuk dalam nomor 1, 2, 3, dan seterusnya.
+  */
   const videoSources = [
     "https://cdn2.videy.co/acG1OPKR1.mp4",
     "https://cdn2.videy.co/3nq2HqEj1.mp4",
     "https://cdn2.videy.co/Ucwkk0gB1.mp4",
-    "https://cdn2.videy.co/0XNtWeNu1.mp4", 
-    "https://cdn2.videy.co/g990Y5yW1.mp4", 
+    "https://cdn2.videy.co/0XNtWeNu1.mp4",
+    "https://cdn2.videy.co/g990Y5yW1.mp4",
     "https://cdn2.videy.co/VBwE9pC11.mp4"
   ];
 
-  // Trigger pada detik ke-15 dan ke-40 untuk setiap video.
+  // Trigger pada detik ke-15 dan ke-40.
   const GATE_TIMES = [15, 40];
 
   const shell = document.getElementById("mainPlayer");
@@ -655,14 +695,14 @@ footer {
   const progress = shell.querySelector(".progress");
   const progressFill = shell.querySelector(".progress-fill");
   const timeEl = shell.querySelector(".time");
-  const overlay = shell.querySelector(".continue-overlay");
+  const overlay = document.getElementById("continueOverlay");
 
-  const numberButtons =
-    document.querySelectorAll(".video-number");
+  const numbersContainer = document.getElementById("videoNumbers");
+  const scrollLeftButton = document.getElementById("scrollLeft");
+  const scrollRightButton = document.getElementById("scrollRight");
 
   const videoTitle = document.getElementById("videoTitle");
-  const videoDescription =
-    document.getElementById("videoDescription");
+  const videoDescription = document.getElementById("videoDescription");
   const nowPlaying = document.getElementById("nowPlaying");
 
   let currentSelection = -1;
@@ -671,6 +711,26 @@ footer {
   let controlsTimer = null;
   let centerTimer = null;
 
+  // Buat tombol nomor secara otomatis dari daftar video.
+  videoSources.forEach((source, index) => {
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "video-number";
+    button.dataset.video = String(index);
+    button.textContent = String(index + 1);
+    button.setAttribute("aria-pressed", "false");
+    button.setAttribute(
+      "aria-label",
+      "Putar video " + (index + 1)
+    );
+
+    numbersContainer.appendChild(button);
+  });
+
+  const numberButtons =
+    numbersContainer.querySelectorAll(".video-number");
+
   function formatTime(seconds) {
     if (!Number.isFinite(seconds) || seconds < 0) {
       return "0:00";
@@ -678,10 +738,45 @@ footer {
 
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60)
-      .toString().padStart(2, "0");
+      .toString()
+      .padStart(2, "0");
 
     return minutes + ":" + secs;
   }
+
+  function updateScrollArrows() {
+    const maxScroll = Math.max(
+      0,
+      numbersContainer.scrollWidth - numbersContainer.clientWidth
+    );
+
+    scrollLeftButton.disabled =
+      numbersContainer.scrollLeft <= 2;
+
+    scrollRightButton.disabled =
+      numbersContainer.scrollLeft >= maxScroll - 2;
+  }
+
+  scrollLeftButton.addEventListener("click", () => {
+    numbersContainer.scrollBy({
+      left: -180,
+      behavior: "smooth"
+    });
+  });
+
+  scrollRightButton.addEventListener("click", () => {
+    numbersContainer.scrollBy({
+      left: 180,
+      behavior: "smooth"
+    });
+  });
+
+  numbersContainer.addEventListener(
+    "scroll",
+    updateScrollArrows
+  );
+
+  window.addEventListener("resize", updateScrollArrows);
 
   function showControls() {
     clearTimeout(controlsTimer);
@@ -713,6 +808,7 @@ footer {
     gateShown = false;
     overlay.classList.remove("show");
     shell.classList.remove("controls-hidden");
+
     clearTimeout(controlsTimer);
     clearTimeout(centerTimer);
   }
@@ -752,7 +848,6 @@ footer {
       } else if (shell.requestFullscreen) {
         await shell.requestFullscreen();
       } else {
-        // Fallback visual untuk browser yang tidak mendukung API fullscreen.
         shell.classList.toggle("is-fullscreen");
       }
     } catch (error) {
@@ -760,8 +855,16 @@ footer {
     }
   }
 
-  // Mengganti sumber video pada pemutar yang sama.
+  // Mengganti video pada pemutar utama yang sama.
   function selectVideo(index) {
+    if (
+      index < -1 ||
+      index >= videoSources.length ||
+      !Number.isInteger(index)
+    ) {
+      return;
+    }
+
     video.pause();
     resetTriggers();
 
@@ -779,26 +882,34 @@ footer {
     });
 
     videoTitle.textContent = title;
+
     videoDescription.textContent = isMain
       ? "Nikmati video utama dengan tampilan nyaman di HP maupun desktop."
       : "Kamu sedang menonton " + title + ".";
 
     nowPlaying.textContent = "Sedang dipilih: " + title;
 
-    // Tidak membuat pemutar baru; hanya mengganti sumber video.
+    // Ganti sumber pada elemen video yang sama.
     video.src = source;
     video.load();
 
-    video.currentTime = 0;
     progressFill.style.width = "0%";
     timeEl.textContent = "0:00 / 0:00";
     updateCenter();
 
-    // Video mulai setelah pengunjung memilih tombol angka.
-    video.play().catch(() => {
-      // Jika browser menolak pemutaran, tombol play tetap tersedia.
-      updateCenter();
-    });
+    // Jika nomor aktif berada di luar layar, geser agar terlihat.
+    if (!isMain && numberButtons[index]) {
+      numberButtons[index].scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "nearest"
+      });
+    }
+
+    updateScrollArrows();
+
+    // Pemutaran dapat memerlukan interaksi ulang jika diblokir browser.
+    video.play().catch(() => updateCenter());
   }
 
   centerBtn.addEventListener("click", event => {
@@ -836,8 +947,10 @@ footer {
   });
 
   progress.addEventListener("keydown", event => {
-    if (event.key !== "ArrowRight" &&
-        event.key !== "ArrowLeft") {
+    if (
+      event.key !== "ArrowRight" &&
+      event.key !== "ArrowLeft"
+    ) {
       return;
     }
 
@@ -879,7 +992,8 @@ footer {
   });
 
   video.addEventListener("loadedmetadata", () => {
-    timeEl.textContent = "0:00 / " + formatTime(video.duration);
+    timeEl.textContent =
+      "0:00 / " + formatTime(video.duration);
   });
 
   video.addEventListener("timeupdate", () => {
@@ -888,7 +1002,8 @@ footer {
         (video.currentTime / video.duration * 100) + "%";
 
       timeEl.textContent =
-        formatTime(video.currentTime) + " / " +
+        formatTime(video.currentTime) +
+        " / " +
         formatTime(video.duration);
     }
 
@@ -903,35 +1018,24 @@ footer {
       video.pause();
       overlay.classList.add("show");
 
-      // Pastikan kontrol tidak menghilang di belakang overlay.
       shell.classList.remove("controls-hidden");
       clearTimeout(controlsTimer);
       updateCenter();
     }
   });
 
+  // Video dilanjutkan setelah tombol overlay ditekan.
   overlay.querySelector('[data-action="continue-ad"]')
     .addEventListener("click", () => {
-      // Tautan iklan dibuka melalui klik eksplisit pengguna.
       overlay.classList.remove("show");
       gateShown = false;
 
-      // Lanjutkan video dari posisi terakhir.
       video.play().catch(() => updateCenter());
     });
 
   numberButtons.forEach(button => {
     button.addEventListener("click", () => {
       const index = Number(button.dataset.video);
-
-      if (
-        !Number.isInteger(index) ||
-        index < 0 ||
-        index >= videoSources.length
-      ) {
-        return;
-      }
-
       selectVideo(index);
     });
   });
@@ -969,17 +1073,18 @@ footer {
           prompt("Salin link halaman ini:", location.href);
         }
       } catch (error) {
-        // Pengguna mungkin membatalkan dialog berbagi.
+        // Berbagi dibatalkan atau tidak tersedia.
       }
     });
 
-  // Halaman dibuka dengan video utama.
   updateCenter();
+
+  requestAnimationFrame(updateScrollArrows);
 
 })();
 </script>
 
-<!-- Histats.com START (async) -->
+<!-- Histats.com START -->
 <script>
 var _Hasync = _Hasync || [];
 _Hasync.push(['Histats.start', '1,5043495,4,0,0,0,00010000']);
